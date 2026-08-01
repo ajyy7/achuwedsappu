@@ -19,7 +19,12 @@ export default async function DashboardPage() {
     cache: "no-store",
   });
 
-  const data = await res.json();
+  let data;
+  try {
+    data = await res.json();
+  } catch (e) {
+    data = { error: "The backend API is currently unavailable or misconfigured." };
+  }
 
   if (!res.ok) {
     return (
