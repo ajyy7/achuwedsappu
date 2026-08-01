@@ -12,18 +12,19 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787'}/api/families/my-family`, {
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-    },
-    cache: "no-store",
-  });
-
+  let res;
   let data;
   try {
+    res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787'}/api/families/my-family`, {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      cache: "no-store",
+    });
     data = await res.json();
   } catch (e) {
-    data = { error: "The backend API is currently unavailable or misconfigured." };
+    data = { error: "Failed to connect to the API. Check if NEXT_PUBLIC_API_URL is set in Vercel Environment Variables." };
+    res = { ok: false };
   }
 
   if (!res.ok) {
