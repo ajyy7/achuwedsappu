@@ -3,21 +3,29 @@ import { redirect } from "next/navigation";
 import { CalendarHeart, MapPin, Users, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import AddGuestForm from "@/components/AddGuestForm";
+import { cookies } from "next/headers";
+
+import GuestList from "@/components/GuestList";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-  if (sessionError || !session) {
+  const cookieStore = await cookies();
+  const phoneToken = cookieStore.get("wedding_phone_token")?.value;
+
+  if (sessionError || (!session && !phoneToken)) {
     redirect("/login");
   }
+
+  const token = session?.access_token || phoneToken;
 
   let res;
   let data;
   try {
     res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787'}/api/families/my-family`, {
       headers: {
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${token}`,
       },
       cache: "no-store",
     });
@@ -57,24 +65,11 @@ export default async function DashboardPage() {
               Your Family Members
             </h2>
             
-            <div className="space-y-4 mb-6">
-              {guests.length === 0 && (
-                <p className="text-muted-foreground text-sm italic">You haven't added any family members yet.</p>
-              )}
-              {guests.map((guest: any) => (
-                <div key={guest.id} className="flex items-center justify-between p-4 rounded-xl border border-border/30 bg-muted/20">
-                  <div>
-                    <p className="font-medium">{guest.firstName} {guest.lastName}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {guest.isAttending === null ? "No RSVP yet" : guest.isAttending ? "Attending" : "Not Attending"}
-                    </p>
-                  </div>
-                  {guest.isAttending && <CheckCircle2 className="w-5 h-5 text-primary" />}
-                </div>
-              ))}
+            <div className="mb-6">
+              <GuestList initialGuests={guests} token={token as string} />
             </div>
 
-            <AddGuestForm token={session.access_token} />
+            <AddGuestForm token={token as string} />
 
             {guests.length > 0 && (
               <div className="mt-8 pt-6 border-t border-border/50">

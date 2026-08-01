@@ -74,6 +74,11 @@ familiesRouter.post('/guests', async (c) => {
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
   if (!profile || !profile.family_id) return c.json({ error: 'Unauthorized' }, 403);
 
+  const { data: family } = await supabase.from('families').select('*').eq('id', profile.family_id).single();
+  if (family && family.name === "Our Honored Guests") {
+    await supabase.from('families').update({ name: `${firstName}'s Family` }).eq('id', profile.family_id);
+  }
+
   const { data: newGuest, error } = await supabase.from('guests').insert({
     family_id: profile.family_id,
     first_name: firstName,
@@ -91,6 +96,55 @@ familiesRouter.post('/guests', async (c) => {
   };
 
   return c.json({ success: true, guest: camelGuest });
+});
+
+familiesRouter.put('/guests/:id', async (c) => {
+  const user = c.get('user');
+  const supabase = getSupabase(c);
+  const guestId = c.req.param('id');
+  const { firstName, lastName } = await c.req.json();
+
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  const { data: guest } = await supabase.from('guests').select('*').eq('id', guestId).single();
+
+  if (!guest || guest.family_id !== profile?.family_id) {
+    return c.json({ error: 'Unauthorized' }, 403);
+  }
+
+  const { data: updatedGuest, error } = await supabase.from('guests').update({
+    first_name: firstName,
+    last_name: lastName,
+  }).eq('id', guestId).select().single();
+
+  if (error) return c.json({ error: error.message }, 500);
+
+  const camelGuest = {
+    id: updatedGuest.id,
+    familyId: updatedGuest.family_id,
+    firstName: updatedGuest.first_name,
+    lastName: updatedGuest.last_name,
+    isAttending: updatedGuest.is_attending,
+  };
+
+  return c.json({ success: true, guest: camelGuest });
+});
+
+familiesRouter.delete('/guests/:id', async (c) => {
+  const user = c.get('user');
+  const supabase = getSupabase(c);
+  const guestId = c.req.param('id');
+
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  const { data: guest } = await supabase.from('guests').select('*').eq('id', guestId).single();
+
+  if (!guest || guest.family_id !== profile?.family_id) {
+    return c.json({ error: 'Unauthorized' }, 403);
+  }
+
+  const { error } = await supabase.from('guests').delete().eq('id', guestId);
+  if (error) return c.json({ error: error.message }, 500);
+
+  return c.json({ success: true });
 });
 
 familiesRouter.post('/rsvp', async (c) => {

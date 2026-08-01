@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
+import { User, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { loginWithPhone } from "../actions/auth";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [step, setStep] = useState<"email" | "success">("email");
+  const [identifier, setIdentifier] = useState("");
+  const [step, setStep] = useState<"input" | "success">("input");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -18,20 +19,46 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: true,
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
-      },
-    });
+    const cleanInput = identifier.trim();
+    
+    // Check if it's a 10 digit phone number
+    const isPhone = /^\d{10}$/.test(cleanInput.replace(/\D/g, ""));
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanInput);
 
-    setLoading(false);
+    if (!isPhone && !isEmail) {
+      setError("Please enter a valid email address or 10-digit phone number.");
+      setLoading(false);
+      return;
+    }
 
-    if (error) {
-      setError(error.message);
+    if (isPhone) {
+      // Clear any existing email session so it doesn't override our new phone session
+      await supabase.auth.signOut();
+      
+      // Execute Server Action for Phone Login
+      const result = await loginWithPhone(cleanInput);
+      if (result?.error) {
+        setError(result.error);
+        setLoading(false);
+      }
+      // If success, the server action automatically redirects to /dashboard
     } else {
-      setStep("success");
+      // Execute standard Email Magic Link
+      const { error } = await supabase.auth.signInWithOtp({
+        email: cleanInput,
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: `${window.location.origin}/auth/confirm`,
+        },
+      });
+
+      setLoading(false);
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setStep("success");
+      }
     }
   };
 
@@ -47,8 +74,8 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-serif text-foreground mb-2">Welcome</h1>
           <p className="text-muted-foreground font-light text-sm">
-            {step === "email" 
-              ? "Enter your email to receive a secure login link." 
+            {step === "input" 
+              ? "Enter your email or 10-digit phone number to sign in." 
               : "Check your inbox! We sent you a magic link."}
           </p>
         </div>
@@ -59,28 +86,28 @@ export default function LoginPage() {
           </div>
         )}
 
-        {step === "email" && (
+        {step === "input" && (
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
-                type="email"
+                type="text"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email address"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="Email or Phone Number"
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/60"
               />
             </div>
             
             <button
               type="submit"
-              disabled={loading || !email}
+              disabled={loading || !identifier}
               className="w-full flex items-center justify-center h-12 rounded-xl bg-primary text-primary-foreground font-medium transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:pointer-events-none"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                 <>
-                  <span className="mr-2">Send Magic Link</span>
+                  <span className="mr-2">Sign In</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
