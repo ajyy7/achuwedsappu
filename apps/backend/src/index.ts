@@ -18,4 +18,12 @@ app.get('/', (c) => {
 
 app.route('/api/families', familiesRouter);
 
+app.onError((err, c) => {
+  console.error(err);
+  return c.json({
+    error: err.message,
+    stack: err.stack
+  }, 500);
+});
+
 export default app;

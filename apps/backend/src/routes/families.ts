@@ -13,46 +13,56 @@ const getSupabase = (c: any) => {
 };
 
 familiesRouter.get('/my-family', async (c) => {
-  const user = c.get('user');
-  const supabase = getSupabase(c);
+  try {
+    const user = c.get('user');
+    const supabase = getSupabase(c);
 
-  let { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    let { data: profile, error: profileErr } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    if (profileErr && profileErr.code !== 'PGRST116') throw profileErr;
 
-  // Auto-create profile and family if they don't exist
-  if (!profile) {
-    const { data: newFamily } = await supabase.from('families').insert({
-      name: user.email?.split('@')[0] || "My Family",
-    }).select().single();
+    // Auto-create profile and family if they don't exist
+    if (!profile) {
+      const { data: newFamily, error: famErr } = await supabase.from('families').insert({
+        name: user.email?.split('@')[0] || "My Family",
+      }).select().single();
+      if (famErr) throw famErr;
 
-    const { data: newProfile } = await supabase.from('profiles').insert({
-      id: user.id,
-      email: user.email,
-      phone: user.phone,
-      family_id: newFamily.id,
-      role: 'GUEST',
-    }).select().single();
+      const { data: newProfile, error: newProfErr } = await supabase.from('profiles').insert({
+        id: user.id,
+        email: user.email,
+        phone: user.phone,
+        family_id: newFamily.id,
+        role: 'GUEST',
+      }).select().single();
+      if (newProfErr) throw newProfErr;
 
-    profile = newProfile;
+      profile = newProfile;
+    }
+
+    const { data: family, error: famGetErr } = await supabase.from('families').select('*').eq('id', profile.family_id).single();
+    if (famGetErr) throw famGetErr;
+    
+    const { data: familyGuests, error: guestsErr } = await supabase.from('guests').select('*').eq('family_id', profile.family_id);
+    if (guestsErr) throw guestsErr;
+
+    // Convert snake_case back to camelCase for the frontend
+    const camelCaseGuests = (familyGuests || []).map(g => ({
+      id: g.id,
+      familyId: g.family_id,
+      firstName: g.first_name,
+      lastName: g.last_name,
+      isAttending: g.is_attending,
+      dietaryRestrictions: g.dietary_restrictions,
+      accommodationNeeded: g.accommodation_needed
+    }));
+
+    return c.json({
+      family,
+      guests: camelCaseGuests,
+    });
+  } catch (e: any) {
+    return c.json({ error: e.message || e.toString(), stack: e.stack }, 500);
   }
-
-  const { data: family } = await supabase.from('families').select('*').eq('id', profile.family_id).single();
-  const { data: familyGuests } = await supabase.from('guests').select('*').eq('family_id', profile.family_id);
-
-  // Convert snake_case back to camelCase for the frontend
-  const camelCaseGuests = (familyGuests || []).map(g => ({
-    id: g.id,
-    familyId: g.family_id,
-    firstName: g.first_name,
-    lastName: g.last_name,
-    isAttending: g.is_attending,
-    dietaryRestrictions: g.dietary_restrictions,
-    accommodationNeeded: g.accommodation_needed
-  }));
-
-  return c.json({
-    family,
-    guests: camelCaseGuests,
-  });
 });
 
 familiesRouter.post('/guests', async (c) => {

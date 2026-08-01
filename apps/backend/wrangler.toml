@@ -2,3 +2,7 @@ name = "achuwedsappu-api"
 compatibility_date = "2024-02-22"
 compatibility_flags = ["nodejs_compat"]
 main = "src/index.ts"
+
+[vars]
+SUPABASE_URL = "https://iczlultpqtjyzxupzdjw.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imljemx1bHRwcXRqeXp4dXB6ZGp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MTQ5MjgsImV4cCI6MjEwMTA5MDkyOH0.K3mz3zdwKpW3sRcyJ2DcZaHngt-HhdgPbKLg9kJKQjA"
