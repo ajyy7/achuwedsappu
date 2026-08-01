@@ -2,17 +2,31 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, CalendarHeart, Heart, ChevronDown, Utensils, Star, Coffee, Clock } from "lucide-react";
+import { ArrowRight, CalendarHeart, Heart, ChevronDown, Utensils, Star, Coffee, Clock, Zap, RefreshCw, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { TimelineSection } from "../components/TimelineSection";
 
 // Reusable Flip Card Component for the Couple
 const FlipCard = ({ person }: { person: any }) => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [showEasterEgg, setShowEasterEgg] = useState(false);
+
+  const handleSuperpowerClick = (e: React.MouseEvent) => {
+    if (person.superpower === "The Monkey Whisperer") {
+      e.stopPropagation();
+      setShowEasterEgg(true);
+    }
+  };
 
   return (
-    <div 
-      className="w-full max-w-sm h-[450px] perspective-1000 mx-auto cursor-pointer group"
+    <>
+    <motion.div 
+      initial={{ rotateZ: 0 }}
+      whileInView={{ rotateZ: [0, -3, 3, -2, 2, 0] }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.6, delay: 0.2 }}
+      className="w-full max-w-sm h-[450px] perspective-1000 mx-auto cursor-pointer group relative"
       onMouseEnter={() => setIsFlipped(true)}
       onMouseLeave={() => setIsFlipped(false)}
       onClick={() => setIsFlipped(!isFlipped)}
@@ -36,31 +50,88 @@ const FlipCard = ({ person }: { person: any }) => {
               <p className="text-secondary font-medium tracking-wider text-sm uppercase mt-1">{person.title}</p>
             </div>
           </div>
+          {/* Tap to flip badge */}
+          <div className="absolute bottom-6 right-6 bg-primary/90 text-primary-foreground backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2 animate-pulse border border-white/20">
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span className="text-xs font-bold uppercase tracking-wider">Tap</span>
+          </div>
         </div>
 
         {/* Back of Card (Funny Stats) */}
         <div 
-          className="absolute w-full h-full backface-hidden rounded-2xl shadow-xl border border-border bg-card p-8 flex flex-col justify-center items-center text-center"
+          className="absolute w-full h-full backface-hidden rounded-2xl shadow-xl border border-border bg-card p-6 flex flex-col justify-center items-center text-center"
           style={{ transform: "rotateY(180deg)" }}
         >
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-            <Heart className="w-8 h-8 text-primary" />
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <Zap className="w-6 h-6 text-primary" />
           </div>
-          <h3 className="text-2xl font-serif text-foreground mb-6">Vital Stats</h3>
           
-          <div className="space-y-4 w-full">
+          <h3 className="text-xl font-serif text-foreground mb-1">Superpower</h3>
+          <div 
+            className={`px-3 py-1 rounded-full mb-1 transition-all ${person.superpower === "The Monkey Whisperer" ? "bg-primary/20 cursor-pointer hover:scale-105 hover:bg-primary/30" : ""}`}
+            onClick={handleSuperpowerClick}
+          >
+            <p className="text-sm font-bold text-primary">
+              {person.superpower} {person.superpower === "The Monkey Whisperer" && "🐒"}
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground mb-6 italic px-2">"{person.superpowerDesc}"</p>
+          
+          <div className="space-y-3 w-full">
             {person.stats.map((stat: any, i: number) => (
-              <div key={i} className="flex flex-col items-center p-3 rounded-xl bg-muted/30 border border-border/50">
-                <span className="text-sm font-medium text-foreground flex items-center gap-2">
+              <div key={i} className="flex flex-col items-center p-2.5 rounded-xl bg-muted/30 border border-border/50">
+                <span className="text-xs font-medium text-foreground flex items-center gap-1.5">
                   {stat.icon} {stat.label}
                 </span>
-                <span className="text-primary font-bold mt-1">{stat.value}</span>
+                <span className="text-primary font-bold mt-0.5">{stat.value}</span>
               </div>
             ))}
           </div>
         </div>
       </motion.div>
-    </div>
+    </motion.div>
+
+    {/* Monkey Easter Egg Modal */}
+    <AnimatePresence>
+      {showEasterEgg && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={() => setShowEasterEgg(false)}
+        >
+          <motion.div 
+            initial={{ scale: 0.8, y: 50 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.8, y: 50 }}
+            className="bg-card rounded-3xl p-4 max-w-lg w-full shadow-2xl relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setShowEasterEgg(false)}
+              className="absolute -top-4 -right-4 bg-primary text-primary-foreground p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <div className="relative w-full aspect-[4/5] rounded-2xl overflow-hidden mb-6 bg-muted">
+              <Image 
+                src="/appuwithmonkey.jpeg" 
+                alt="Appu with Monkey"
+                fill
+                className="object-cover"
+              />
+            </div>
+            <div className="text-center pb-4 px-2">
+              <h3 className="text-2xl font-serif mb-2 text-foreground">The exact moment she met her true soulmate.</h3>
+              <p className="text-muted-foreground italic text-lg">(Sorry, bro).</p>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   );
 };
 
@@ -103,19 +174,23 @@ export default function Home() {
       name: "Achu",
       title: "The Groom",
       image: "/achu.jpeg",
+      superpower: "The Amma Summoner",
+      superpowerDesc: "Calling Amma to turn on a fan that is exactly 2 feet away from him.",
       stats: [
-        { label: "Chai breaks initiated", value: "1,402", icon: <Coffee className="w-4 h-4"/> },
-        { label: "Emails ignored to text Appu", value: "Countless", icon: <Star className="w-4 h-4"/> },
-        { label: "Excitement for the Sadya", value: "100%", icon: <Utensils className="w-4 h-4"/> },
+        { label: "Laziness", value: "100 / 10", icon: <Star className="w-4 h-4"/> },
+        { label: "\"Amma!\" calls per day", value: "47", icon: <Coffee className="w-4 h-4"/> },
+        { label: "KFC on Wednesdays", value: "Non-negotiable", icon: <Utensils className="w-4 h-4"/> },
       ]
     },
     {
       name: "Appu",
       title: "The Bride",
       image: "/appu1.jpeg",
+      superpower: "The Monkey Whisperer",
+      superpowerDesc: "Naturally attracts monkeys and insists on hugging them.",
       stats: [
-        { label: "Sneaky glances across the office", value: "Too many", icon: <Star className="w-4 h-4"/> },
-        { label: "Patience for wedding shopping", value: "2 / 10", icon: <Clock className="w-4 h-4"/> },
+        { label: "Ability to tolerate Achu's jokes", value: "Legendary", icon: <Star className="w-4 h-4"/> },
+        { label: "Monkeys befriended", value: "At least 1", icon: <Heart className="w-4 h-4"/> },
         { label: "Love for Achu", value: "11 / 10", icon: <Heart className="w-4 h-4"/> },
       ]
     }
@@ -124,15 +199,15 @@ export default function Home() {
   const faqs = [
     {
       question: "Is there a dress code?",
-      answer: "Traditional Kerala attire (Kasavu mundu or saree) is highly encouraged! Otherwise, wear whatever makes you feel fabulous and gives you enough room to eat a massive Sadya."
+      answer: "Traditional Kerala attire is highly encouraged! Basically, wear whatever gives you enough breathing room for the Sadya, and whatever you don't mind getting chased by a monkey in."
     },
     {
-      question: "How many curries will be served in the Sadya?",
-      answer: "Enough that you'll lose count halfway through! Please come with a completely empty stomach and prepare for a food coma."
+      question: "Will Achu actually do any work at his own wedding?",
+      answer: "Current statistical models indicate a 98% chance of him delegating all heavy lifting to Appu, and the remaining 2% to Amma."
     },
     {
       question: "Who built this ridiculously amazing website?",
-      answer: "That would be the groom's incredibly talented, incredibly cool little brother. (And yes, he wrote this FAQ)."
+      answer: "The groom's cool brother. Building this was basically my way of quietly reminding all the aunties and uncles that I'm officially next in line. Please keep those blessings (and alliances) coming."
     }
   ];
 
@@ -201,7 +276,7 @@ export default function Home() {
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-serif text-foreground mb-4">Meet the Couple</h2>
-            <p className="text-muted-foreground font-light text-lg">Hover or tap to reveal their true stats.</p>
+            <p className="text-muted-foreground font-light text-lg">Tap the cards below to reveal their true stats!</p>
           </div>
           
           <div className="grid md:grid-cols-2 gap-12 md:gap-8 max-w-4xl mx-auto">
@@ -211,6 +286,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Photo Timeline & Poll Section */}
+      <TimelineSection />
 
       {/* FAQ Section */}
       <section className="w-full py-24 px-4 z-10">
