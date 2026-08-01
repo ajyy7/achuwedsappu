@@ -1,0 +1,4 @@
+name = "achuwedsappu-api"
+compatibility_date = "2024-02-22"
+compatibility_flags = ["nodejs_compat"]
+main = "src/index.ts"
