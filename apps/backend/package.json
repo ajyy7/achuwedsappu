@@ -8,8 +8,8 @@
     "deploy": "wrangler deploy"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.111.0",
-    "drizzle-orm": "^0.45.2",
+    "@supabase/supabase-js": "^2.48.0",
+    "drizzle-orm": "^0.39.0",
     "hono": "^4.0.0",
     "postgres": "^3.4.9"
   },

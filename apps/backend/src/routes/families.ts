@@ -1,94 +1,107 @@
 import { Hono } from 'hono';
 import { authMiddleware, Bindings, Variables } from '../middleware/auth';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import * as schema from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { createClient } from '@supabase/supabase-js';
 
 const familiesRouter = new Hono<{ Bindings: Bindings, Variables: Variables }>();
 
 familiesRouter.use('/*', authMiddleware);
 
-const getDb = (connectionString: string) => {
-  const client = postgres(connectionString, { prepare: false });
-  return drizzle(client, { schema });
+const getSupabase = (c: any) => {
+  return createClient(c.env.SUPABASE_URL, c.env.SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: `Bearer ${c.req.header('Authorization')?.split(' ')[1]}` } }
+  });
 };
 
 familiesRouter.get('/my-family', async (c) => {
   const user = c.get('user');
-  const db = getDb(c.env.DATABASE_URL);
+  const supabase = getSupabase(c);
 
-  let profileResult = await db.select().from(schema.profiles).where(eq(schema.profiles.id, user.id));
-  let profile = profileResult[0];
+  let { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
 
   // Auto-create profile and family if they don't exist
   if (!profile) {
-    const [newFamily] = await db.insert(schema.families).values({
+    const { data: newFamily } = await supabase.from('families').insert({
       name: user.email?.split('@')[0] || "My Family",
-    }).returning();
+    }).select().single();
 
-    const [newProfile] = await db.insert(schema.profiles).values({
+    const { data: newProfile } = await supabase.from('profiles').insert({
       id: user.id,
       email: user.email,
       phone: user.phone,
-      familyId: newFamily.id,
+      family_id: newFamily.id,
       role: 'GUEST',
-    }).returning();
+    }).select().single();
 
     profile = newProfile;
   }
 
-  const familyResult = await db.select().from(schema.families).where(eq(schema.families.id, profile.familyId!));
-  const family = familyResult[0];
+  const { data: family } = await supabase.from('families').select('*').eq('id', profile.family_id).single();
+  const { data: familyGuests } = await supabase.from('guests').select('*').eq('family_id', profile.family_id);
 
-  const familyGuests = await db.select().from(schema.guests).where(eq(schema.guests.familyId, profile.familyId!));
+  // Convert snake_case back to camelCase for the frontend
+  const camelCaseGuests = (familyGuests || []).map(g => ({
+    id: g.id,
+    familyId: g.family_id,
+    firstName: g.first_name,
+    lastName: g.last_name,
+    isAttending: g.is_attending,
+    dietaryRestrictions: g.dietary_restrictions,
+    accommodationNeeded: g.accommodation_needed
+  }));
 
   return c.json({
     family,
-    guests: familyGuests,
+    guests: camelCaseGuests,
   });
 });
 
 familiesRouter.post('/guests', async (c) => {
   const user = c.get('user');
-  const db = getDb(c.env.DATABASE_URL);
+  const supabase = getSupabase(c);
   
   const { firstName, lastName } = await c.req.json();
 
-  const profileResult = await db.select().from(schema.profiles).where(eq(schema.profiles.id, user.id));
-  const profile = profileResult[0];
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  if (!profile || !profile.family_id) return c.json({ error: 'Unauthorized' }, 403);
 
-  if (!profile || !profile.familyId) return c.json({ error: 'Unauthorized' }, 403);
+  const { data: newGuest, error } = await supabase.from('guests').insert({
+    family_id: profile.family_id,
+    first_name: firstName,
+    last_name: lastName,
+  }).select().single();
 
-  const [newGuest] = await db.insert(schema.guests).values({
-    familyId: profile.familyId,
-    firstName,
-    lastName,
-  }).returning();
+  if (error) return c.json({ error: error.message }, 500);
 
-  return c.json({ success: true, guest: newGuest });
+  const camelGuest = {
+    id: newGuest.id,
+    familyId: newGuest.family_id,
+    firstName: newGuest.first_name,
+    lastName: newGuest.last_name,
+    isAttending: newGuest.is_attending,
+  };
+
+  return c.json({ success: true, guest: camelGuest });
 });
 
 familiesRouter.post('/rsvp', async (c) => {
   const user = c.get('user');
-  const db = getDb(c.env.DATABASE_URL);
+  const supabase = getSupabase(c);
   
   const body = await c.req.json();
   const { guestId, isAttending, dietaryRestrictions, accommodationNeeded } = body;
 
-  const profileResult = await db.select().from(schema.profiles).where(eq(schema.profiles.id, user.id));
-  const profile = profileResult[0];
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  const { data: guest } = await supabase.from('guests').select('*').eq('id', guestId).single();
 
-  const guestResult = await db.select().from(schema.guests).where(eq(schema.guests.id, guestId));
-  const guest = guestResult[0];
-
-  if (!guest || guest.familyId !== profile?.familyId) {
+  if (!guest || guest.family_id !== profile?.family_id) {
     return c.json({ error: 'Unauthorized' }, 403);
   }
 
-  await db.update(schema.guests)
-    .set({ isAttending, dietaryRestrictions, accommodationNeeded, updatedAt: new Date() })
-    .where(eq(schema.guests.id, guestId));
+  await supabase.from('guests').update({
+    is_attending: isAttending,
+    dietary_restrictions: dietaryRestrictions,
+    accommodation_needed: accommodationNeeded,
+  }).eq('id', guestId);
 
   return c.json({ success: true });
 });
@@ -96,15 +109,15 @@ familiesRouter.post('/rsvp', async (c) => {
 // Admin endpoint to view all
 familiesRouter.get('/all', async (c) => {
   const user = c.get('user');
-  const db = getDb(c.env.DATABASE_URL);
+  const supabase = getSupabase(c);
 
-  const profileResult = await db.select().from(schema.profiles).where(eq(schema.profiles.id, user.id));
-  if (profileResult[0]?.role !== 'ADMIN') {
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  if (profile?.role !== 'ADMIN') {
     return c.json({ error: 'Unauthorized' }, 403);
   }
 
-  const allGuests = await db.select().from(schema.guests);
-  const allFamilies = await db.select().from(schema.families);
+  const { data: allGuests } = await supabase.from('guests').select('*');
+  const { data: allFamilies } = await supabase.from('families').select('*');
   
   return c.json({ guests: allGuests, families: allFamilies });
 });
