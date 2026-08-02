@@ -243,7 +243,7 @@ export default function Home() {
           </div>
 
           <h1 className="text-6xl md:text-8xl lg:text-9xl tracking-tighter text-foreground leading-tight py-4">
-            Achu <span className="text-secondary italic font-light">&</span> Appu
+            Ashwin <span className="text-secondary italic font-light">&</span> Aparna
           </h1>
           
           <div className="space-y-4">

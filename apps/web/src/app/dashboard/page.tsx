@@ -70,35 +70,36 @@ export default async function DashboardPage() {
             </div>
 
             <AddGuestForm token={token as string} />
-
-            {guests.length > 0 && (
-              <div className="mt-8 pt-6 border-t border-border/50">
-                <Link href="/rsvp">
-                  <div className="w-full sm:w-auto inline-flex items-center justify-center h-12 rounded-xl bg-primary px-8 text-primary-foreground font-medium transition-all hover:bg-primary/90 hover:scale-[1.02]">
-                    Submit RSVPs
-                  </div>
-                </Link>
-              </div>
-            )}
           </div>
         </div>
 
         <div className="col-span-1 space-y-6">
+          {guests.length > 0 && (
+            <div className="bg-card border border-border/50 rounded-2xl p-6 shadow-sm flex flex-col items-center text-center">
+              <h3 className="font-serif text-xl mb-3">Ready to celebrate?</h3>
+              <Link href="/rsvp" className="w-full">
+                <div className="w-full inline-flex items-center justify-center h-12 rounded-xl bg-primary px-8 text-primary-foreground font-medium transition-all hover:bg-primary/90 hover:scale-[1.02]">
+                  Submit RSVPs
+                </div>
+              </Link>
+            </div>
+          )}
+
           <div className="bg-secondary/10 border border-secondary/20 rounded-2xl p-6 shadow-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 w-24 h-24 bg-secondary/20 rounded-bl-full blur-xl -z-10" />
             <h3 className="font-serif text-xl mb-4 flex items-center text-secondary-foreground">
               <CalendarHeart className="w-5 h-5 mr-2 text-secondary" />
               When
             </h3>
-            <p className="text-sm font-medium">Saturday, October 24, 2026</p>
+            <p className="text-sm font-medium">Sunday, August 23, 2026</p>
             <p className="text-sm text-muted-foreground mb-4">4:00 PM - 11:00 PM</p>
             
             <h3 className="font-serif text-xl mb-4 mt-6 flex items-center text-secondary-foreground">
               <MapPin className="w-5 h-5 mr-2 text-secondary" />
               Where
             </h3>
-            <p className="text-sm font-medium">The Grand Estate</p>
-            <p className="text-sm text-muted-foreground">123 Wedding Lane<br/>Beautiful City, ST 12345</p>
+            <p className="text-sm font-medium">Taj Santacruz</p>
+            <p className="text-sm text-muted-foreground">Chhatrapati Shivaji Maharaj<br/>International Airport (T1)<br/>Mumbai, Maharashtra 400099</p>
           </div>
         </div>
       </div>

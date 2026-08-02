@@ -126,14 +126,14 @@ export function TimelineSection() {
           <p className="text-muted-foreground mb-8">Having reviewed the evidence, who is cuter?</p>
 
           {!votedAppu ? (
-            <div className="flex flex-col md:flex-row items-center justify-center gap-6 relative h-40 md:h-auto">
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 relative min-h-[140px] md:min-h-0">
               
               {/* Achu Button (The wrong answer) */}
               <motion.button
                 animate={{ x: achuPos.x, y: achuPos.y }}
                 onClick={handleAchuVote}
                 onMouseEnter={handleAchuVote}
-                className="absolute md:relative px-8 py-3 rounded-full bg-secondary text-secondary-foreground font-medium shadow-md transition-colors hover:bg-secondary/80 outline-none z-10"
+                className="relative md:absolute px-8 py-3 rounded-full bg-secondary text-secondary-foreground font-medium shadow-md transition-colors hover:bg-secondary/80 outline-none z-10"
               >
                 Definitely Achu
               </motion.button>
@@ -141,7 +141,7 @@ export function TimelineSection() {
               {/* Appu Button (The right answer) */}
               <button
                 onClick={handleAppuVote}
-                className="absolute md:relative px-8 py-3 rounded-full bg-primary text-primary-foreground font-medium shadow-lg hover:bg-primary/90 hover:scale-105 transition-all outline-none z-20 top-20 md:top-auto"
+                className="relative px-8 py-3 rounded-full bg-primary text-primary-foreground font-medium shadow-lg hover:bg-primary/90 hover:scale-105 transition-all outline-none z-20"
               >
                 100% Appu
               </button>
