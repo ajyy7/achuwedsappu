@@ -255,6 +255,21 @@ export default function Home() {
             </p>
           </div>
         </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5, duration: 1 }}
+          className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center"
+        >
+          <span className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Scroll to discover</span>
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <ChevronDown className="w-6 h-6 text-primary" />
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* Meet the Couple Section */}
