@@ -98,8 +98,8 @@ export default async function DashboardPage() {
               <MapPin className="w-5 h-5 mr-2 text-secondary" />
               Where
             </h3>
-            <p className="text-sm font-medium">Taj Santacruz</p>
-            <p className="text-sm text-muted-foreground">Chhatrapati Shivaji Maharaj<br/>International Airport (T1)<br/>Mumbai, Maharashtra 400099</p>
+            <p className="text-sm font-medium">Taj Cochin</p>
+            <p className="text-sm text-muted-foreground">Cochin International Airport<br/>Airport Rd, Nedumbassery<br/>Kochi, Kerala 683572</p>
           </div>
         </div>
       </div>
