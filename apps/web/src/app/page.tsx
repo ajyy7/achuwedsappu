@@ -254,20 +254,6 @@ export default function Home() {
               What started as a workplace friendship slowly turned into a lifetime commitment. We invite you to join us as we tie the knot!
             </p>
           </div>
-
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.8 }}
-            className="flex flex-col sm:flex-row gap-4 pt-8 w-full sm:w-auto"
-          >
-            <Link href="/login">
-              <div className="group relative inline-flex h-14 items-center justify-center overflow-hidden rounded-full bg-primary px-10 font-medium text-lg text-primary-foreground transition-all duration-300 hover:scale-105 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/20 w-full sm:w-auto">
-                <span className="mr-2">Unlock Invitation & RSVP</span>
-                <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
-              </div>
-            </Link>
-          </motion.div>
         </motion.div>
       </section>
 
