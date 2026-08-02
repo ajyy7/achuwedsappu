@@ -254,20 +254,6 @@ export default function Home() {
               What started as a workplace friendship slowly turned into a lifetime commitment. We invite you to join us as we tie the knot!
             </p>
           </div>
-
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.8 }}
-            className="flex flex-col sm:flex-row gap-4 pt-8 w-full sm:w-auto"
-          >
-            <Link href="/login">
-              <div className="group relative inline-flex h-14 items-center justify-center overflow-hidden rounded-full bg-primary px-10 font-medium text-lg text-primary-foreground transition-all duration-300 hover:scale-105 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/20 w-full sm:w-auto">
-                <span className="mr-2">Unlock Invitation & RSVP</span>
-                <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
-              </div>
-            </Link>
-          </motion.div>
         </motion.div>
       </section>
 
@@ -289,6 +275,28 @@ export default function Home() {
 
       {/* Photo Timeline & Poll Section */}
       <TimelineSection />
+
+      {/* RSVP Call To Action */}
+      <section className="w-full py-20 px-4 bg-primary/5 border-t border-border/50 flex justify-center z-10 relative">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8 }}
+          className="flex flex-col items-center text-center space-y-6 max-w-2xl"
+        >
+          <h2 className="text-4xl md:text-5xl font-serif text-foreground">Are you ready to join us?</h2>
+          <p className="text-muted-foreground font-light text-lg">Unlock your personal invitation and let us know if you can make it!</p>
+          <div className="pt-4">
+            <Link href="/login">
+              <div className="group relative inline-flex h-14 items-center justify-center overflow-hidden rounded-full bg-primary px-10 font-medium text-lg text-primary-foreground transition-all duration-300 hover:scale-105 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/20 w-full sm:w-auto">
+                <span className="mr-2">Unlock Invitation & RSVP</span>
+                <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
+              </div>
+            </Link>
+          </div>
+        </motion.div>
+      </section>
 
       {/* FAQ Section */}
       <section className="w-full py-24 px-4 z-10">
